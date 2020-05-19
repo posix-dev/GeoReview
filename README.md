@@ -34,4 +34,4 @@ npm run build
 ## License
 [MIT](./LICENSE)
 
-Copyright (c) 2018-present, [Pavel_Arkhipov](https://github.com/posix-dev/)
+Copyright (c) 2020-present, [Pavel_Arkhipov](https://github.com/posix-dev/)
