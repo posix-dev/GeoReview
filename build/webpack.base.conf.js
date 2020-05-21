@@ -112,11 +112,11 @@ module.exports = {
         new MiniCssExtractPlugin({
             filename: `${PATHS.assets}css/[name].[hash].css`,
         }),
-        new CopyWebpackPlugin([
-            {from: `${PATHS.src}/${PATHS.assets}img`, to: `${PATHS.assets}img`},
-            {from: `${PATHS.src}/${PATHS.assets}fonts`, to: `${PATHS.assets}fonts`},
-            {from: `${PATHS.src}/static`, to: ''},
-        ]),
+        // new CopyWebpackPlugin([
+        //     {from: `${PATHS.src}/${PATHS.assets}img`, to: `${PATHS.assets}img`},
+        //     {from: `${PATHS.src}/${PATHS.assets}fonts`, to: `${PATHS.assets}fonts`},
+        //     {from: `${PATHS.src}/static`, to: ''},
+        // ]),
 
         // Automatic creation any html pages (Don't forget to RERUN dev server)
         // see more: https://github.com/vedees/webpack-template/blob/master/README.md#create-another-html-files
