@@ -28,7 +28,7 @@ export class Db {
             spot: "Africa",
             comment: "hello1",
             coords: "55.7558,37.6173",
-            date: 12543534534
+            date: "16 Jan"
         });
     }
 

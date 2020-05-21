@@ -21,17 +21,9 @@ function init() {
 
         for (const item of query) {
             let coords = item.coords.split(',')
-            let reviewsByCoords = query.filter(queryItem => queryItem.coords === item.coords)
+            let reviewsByCoords = query.filter(queryItem => queryItem.coords === item.coords) //get reviews by coordinates
             const geocode = await ymaps.geocode(coords);
             const address = geocode.geoObjects.get(0).properties.get('text');
-            // const carouselData = {
-            //     coords,
-            //     address,
-            //     comment: item.comment,
-            //     name: item.name,
-            //     spot: item.spot,
-            //     reviews: reviewsByCoords
-            // }
             const placemark = new ymaps.Placemark(coords, {
                 address: address,
                 coords: coords,
@@ -43,7 +35,7 @@ function init() {
                 preset: 'islands#violetDotIcon',
                 balloonLayout: await createReviewWindow(coords)
             });
-            placemarks.push(placemark/*createCarouselPlaceMark(carouselData)*/);
+            placemarks.push(placemark);
         }
 
         clusterer.add(placemarks);
@@ -163,11 +155,14 @@ const createReviewWindow = async (coords) => {
                     obj[item.name] = item.value;
                     return obj;
                 }, {});
-                data['date'] = Date.now()
-                data['coords'] = coords
-                $('.form__name').val('')
-                $('.form__spot').val('')
-                $('.form__comment').val('')
+                data['date'] = new Date().toLocaleDateString('ru', {
+                    year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric',
+                    minute: 'numeric', second: 'numeric'
+                });
+                data['coords'] = coords;
+                $('.form__name').val('');
+                $('.form__spot').val('');
+                $('.form__comment').val('');
                 db.put(data);
                 db.getReviews(coords).onsuccess = function (e) {
                     let data = e.target.result;
@@ -180,24 +175,10 @@ const createReviewWindow = async (coords) => {
                     //     name: data.name,
                     //     spot: data.spot,
                     // });
-                }
+                };
             }
         }
     );
 
     return balloon;
 }
-
-
-// const createCarouselPlaceMark = (data) => {
-//     return new ymaps.Placemark(data.coords, {
-//         address: data.address,
-//         comment: data.comment,
-//         name: data.name,
-//         spot: data.spot,
-//         reviews: data.reviews
-//     }, {
-//         preset: 'islands#violetDotIcon',
-//         balloonLayout: createReviewWindow()
-//     });
-// }
