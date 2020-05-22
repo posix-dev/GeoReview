@@ -1,9 +1,31 @@
 import {Db} from "./db";
 
-ymaps.ready(init);
-
 const db = new Db();
+
+ymaps.ready(init);
 let map;
+
+// const uniqBy = (a, key) => {
+//     let seen = {};
+//     return a.filter(function (item) {
+//         let k = key(item);
+//         return seen.hasOwnProperty(k) ? false : (seen[k] = true);
+//     })
+// }
+//
+// const getUniqArray = (query) => {
+//     let uniqArray = [];
+//
+//     for (const item of query) {
+//         uniqArray
+//             .push(query.filter(queryItem => queryItem.coords === item.coords));
+//     }
+//
+//     uniqArray = uniqBy(uniqArray, JSON.stringify);
+//
+//     return uniqArray;
+// }
+
 
 function init() {
     map = new ymaps.Map("map", {
@@ -17,11 +39,12 @@ function init() {
 
     db.getAll().onsuccess = async (e) => {
         let query = await e.target.result;
+        // let uniqArray = getUniqArray(query)
         let placemarks = [];
 
         for (const item of query) {
-            let coords = item.coords.split(',')
-            let reviewsByCoords = query.filter(queryItem => queryItem.coords === item.coords) //get reviews by coordinates
+            let coords = item.coords.split(',');
+            let reviewsByCoords = query.filter(queryItem => queryItem.coords === item.coords);
             const geocode = await ymaps.geocode(coords);
             const address = geocode.geoObjects.get(0).properties.get('text');
             const placemark = new ymaps.Placemark(coords, {
@@ -33,7 +56,8 @@ function init() {
                 spot: item.spot,
             }, {
                 preset: 'islands#violetDotIcon',
-                balloonLayout: await createReviewWindow(coords)
+                balloonLayout: await createReviewWindow(coords),
+                hideIconOnBalloonOpen: false,
             });
             placemarks.push(placemark);
         }
@@ -52,10 +76,12 @@ function init() {
                     address: address, coords: coords, reviews: await e.target.result
                 }, {
                     preset: 'islands#violetDotIcon',
-                    balloonLayout: await createReviewWindow(coords)
+                    balloonLayout: await createReviewWindow(coords),
+                    hideIconOnBalloonOpen: false,
                 });
 
                 clusterer.add(myPlacemark);
+                myPlacemark.balloon.open()
             }
         } else {
             map.balloon.close();
@@ -65,9 +91,39 @@ function init() {
 
 const createCluster = () => {
     let customItemContentLayout = ymaps.templateLayoutFactory.createClass(
-        '<h2 class=carousel_header>{{ properties.spot }}</h2>' +
-        '<button class=carousel_address type=button>{{ properties.address }}</button>' +
-        '<div class=carousel_footer>{{ properties.comment }}</div>'
+        '<h2 class=carousel_header id=cluster_spot>{{ properties.spot }}</h2>' +
+        '<button class=carousel_address id=cluster_address type=button>{{ properties.address }}</button>' +
+        '<div class="carousel_footer" id="cluster_comment">{{ properties.comment }}</div>' +
+        '<div class="visually_hidden" id="cluster_name" type="button">{{ properties.name }}</div>' +
+        '<div class="visually_hidden" id="cluster_reviews" type="button">{{ properties.reviews }}</div>' +
+        '<div class="visually_hidden" id="cluster_address" type="button">{{ properties.address }}</div>' +
+        '<div class="visually_hidden" id="cluster_coords" type="button">{{ properties.coords }}</div>', {
+            build: function () {
+                customItemContentLayout.superclass.build.call(this);
+                $('.carousel_address').bind('click', this.popupCloseCallback);
+            },
+            clear: function () {
+                $('.carousel_address').unbind('click', this.popupCloseCallback);
+                customItemContentLayout.superclass.clear.call(this);
+            },
+            popupCloseCallback: async function (e) {
+                let coords = $('#cluster_coords').text();
+                let address = $('#cluster_address').text();
+                let coordsForBalloon = coords.split(",");
+                db.getReviews(coords).onsuccess = async e => {
+                    let myPlacemark = new ymaps.Placemark(coordsForBalloon, {
+                        address: address, coords: coordsForBalloon, reviews: await e.target.result
+                    }, {
+                        preset: 'islands#violetDotIcon',
+                        balloonLayout: await createReviewWindow(coordsForBalloon),
+                        hideIconOnBalloonOpen: false,
+                    });
+
+                    map.geoObjects.add(myPlacemark);
+                    myPlacemark.balloon.open();
+                }
+            }
+        }
     );
 
     return new ymaps.Clusterer({
@@ -144,14 +200,12 @@ const createReviewWindow = async (coords) => {
                 $('#popupClose').unbind('click', this.popupCloseCallback);
                 balloon.superclass.clear.call(this);
             },
-            popupCloseCallback: function (e) {
+            popupCloseCallback: (e) => {
                 e.preventDefault();
                 map.balloon.close();
             },
-            addReview: function (e) {
-                let target = e.target;
-                console.dir(target);
-                let data = $('.form').serializeArray().reduce(function (obj, item) {
+            addReview: (e) => {
+                let data = $('.form').serializeArray().reduce((obj, item) => {
                     obj[item.name] = item.value;
                     return obj;
                 }, {});
@@ -164,10 +218,10 @@ const createReviewWindow = async (coords) => {
                 $('.form__spot').val('');
                 $('.form__comment').val('');
                 db.put(data);
-                db.getReviews(coords).onsuccess = function (e) {
+                db.getReviews(coords).onsuccess = (e) => {
                     let data = e.target.result;
                     console.dir(data)
-                    // placemark.properties.set('balloonContent', {
+                    // map.balloon.properties.set('balloonContent', {
                     //     address: data.address,
                     //     coords: data.coords,
                     //     reviews: data.reviews,

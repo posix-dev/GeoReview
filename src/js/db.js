@@ -44,6 +44,7 @@ export class Db {
         };
 
         let objectStore = transaction.objectStore("reviews");
+        debugger;
         let review = {
             name: data.name,
             spot: data.spot,
