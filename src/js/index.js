@@ -28,12 +28,14 @@ let map;
 
 
 function init() {
+    let balloon = createReviewWindow()
     map = new ymaps.Map("map", {
         center: [57.5262, 38.3061],
         zoom: 11,
         controls: ['zoomControl']
     }, {
-        searchControlProvider: 'yandex#search'
+        searchControlProvider: 'yandex#search',
+        balloon
     });
     let clusterer = createCluster();
 
@@ -66,23 +68,30 @@ function init() {
         map.geoObjects.add(clusterer);
     }
 
-    map.events.add('click', async (e) => {
+    map.events.add('click', async e => {
+        let myPlacemark;
         if (!map.balloon.isOpen()) {
             let coords = e.get('coords');
             const geocode = await ymaps.geocode(coords);
             const address = geocode.geoObjects.get(0).properties.get('text');
             db.getReviews(coords).onsuccess = async e => {
-                let myPlacemark = new ymaps.Placemark(coords, {
-                    address: address, coords: coords, reviews: await e.target.result
-                }, {
-                    preset: 'islands#violetDotIcon',
-                    balloonLayout: await createReviewWindow(coords),
-                    hideIconOnBalloonOpen: false,
+                // myPlacemark = new ymaps.Placemark(coords, {
+                //     address: address, coords: coords, reviews: await e.target.result
+                // }, {
+                //     preset: 'islands#violetDotIcon',
+                //     balloonLayout: await createReviewWindow(coords),
+                //     hideIconOnBalloonOpen: false,
+                // });
+                //
+                // clusterer.add(myPlacemark);
+                // myPlacemark.balloon.open()
+                map.balloon.open(coords, {
+                    properties: {
+                        address: address,
+                    }
                 });
-
-                clusterer.add(myPlacemark);
-                myPlacemark.balloon.open()
             }
+
         } else {
             map.balloon.close();
         }
@@ -152,7 +161,7 @@ const createCluster = () => {
     });
 }
 
-const createReviewWindow = async (coords) => {
+const createReviewWindow = async (coords = []) => {
     const balloon = ymaps.templateLayoutFactory.createClass(
         '<div class="popup">' +
         '<div class="popup__inner">' +
@@ -204,7 +213,7 @@ const createReviewWindow = async (coords) => {
                 e.preventDefault();
                 map.balloon.close();
             },
-            addReview: (e) => {
+            addReview: () => {
                 let data = $('.form').serializeArray().reduce((obj, item) => {
                     obj[item.name] = item.value;
                     return obj;
@@ -218,16 +227,16 @@ const createReviewWindow = async (coords) => {
                 $('.form__spot').val('');
                 $('.form__comment').val('');
                 db.put(data);
-                db.getReviews(coords).onsuccess = (e) => {
-                    let data = e.target.result;
-                    console.dir(data)
-                    // map.balloon.properties.set('balloonContent', {
-                    //     address: data.address,
-                    //     coords: data.coords,
-                    //     reviews: data.reviews,
-                    //     comment: data.comment,
-                    //     name: data.name,
-                    //     spot: data.spot,
+                db.getReviews(coords).onsuccess = async () => {
+                    // const geocode = await ymaps.geocode(coords);
+                    // debugger;
+                    // geocode.geoObjects.get(0).properties.set({
+                    //         address: data.address,
+                    //         coords: data.coords,
+                    //         reviews: data.reviews,
+                    //         comment: data.comment,
+                    //         name: data.name,
+                    //         spot: data.spot,
                     // });
                 };
             }
