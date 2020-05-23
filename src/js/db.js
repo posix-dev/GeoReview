@@ -36,15 +36,14 @@ export class Db {
     put(data) {
         let transaction = this.db.transaction(["reviews"], "readwrite");
         transaction.oncomplete = function (e) {
-            console.log("All done!");
+            console.dir(`success put - ${data}`);
         };
 
         transaction.onerror = function (e) {
-            // Don't forget to handle errors!
+            console.dir(`error in put - ${e.target}`);
         };
 
         let objectStore = transaction.objectStore("reviews");
-        debugger;
         let review = {
             name: data.name,
             spot: data.spot,
@@ -53,9 +52,7 @@ export class Db {
             date: data.date
         }
 
-        objectStore.put(review).onsuccess = (e) => {
-            console.log(`ehhu - ${e.target.result}`)
-        }
+        return objectStore.put(review);
     }
 
     getReviews(coords) {
