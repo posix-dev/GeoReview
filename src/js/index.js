@@ -13,6 +13,46 @@ function init() {
     initClickListeners();
 }
 
+const initMapsVariables = () => {
+    balloon = createBalloon();
+    clusterer = createCluster();
+    map = new ymaps.Map("map", {
+        center: [57.5262, 38.3061],
+        zoom: 11,
+        controls: ['zoomControl']
+    }, {
+        balloonLayout: balloon
+    });
+}
+
+const initReviewsFromDb = () => db.getAll().onsuccess = async (e) => {
+    let query = await e.target.result;
+    let placemarks = [];
+
+    for (const item of query) {
+        // let placemark = createAndGetClusterPlacemark(item, query)
+        let coords = item.coords.split(',');
+        let reviewsByCoords = query.filter(queryItem => queryItem.coords === item.coords);
+        const geocode = await ymaps.geocode(coords);
+        const address = geocode.geoObjects.get(0).properties.get('text');
+        const placemark = new ymaps.Placemark(coords, {
+            address: address,
+            coords: coords,
+            reviews: reviewsByCoords,
+            comment: item.comment,
+            name: item.name,
+            spot: item.spot,
+        }, {
+            preset: 'islands#violetDotIcon',
+            hideIconOnBalloonOpen: false,
+        });
+        placemarks.push(placemark);
+    }
+
+    clusterer.add(placemarks);
+    map.geoObjects.add(clusterer);
+}
+
 const initClickListeners = () => {
     // map.geoObjects.events.add('click', async e => {
     //     if (e.originalEvent.currentTarget.options.events.types.change[1]._name === 'clusterer') {
@@ -72,46 +112,8 @@ const initClickListeners = () => {
     })
 }
 
-const initMapsVariables = () => {
-    balloon = createBalloon();
-    clusterer = createCluster();
-    map = new ymaps.Map("map", {
-        center: [57.5262, 38.3061],
-        zoom: 11,
-        controls: ['zoomControl']
-    }, {
-        balloonLayout: balloon
-    });
-}
-
-const initReviewsFromDb = () => db.getAll().onsuccess = async (e) => {
-    let query = await e.target.result;
-    let placemarks = [];
-
-    for (const item of query) {
-        let coords = item.coords.split(',');
-        let reviewsByCoords = query.filter(queryItem => queryItem.coords === item.coords);
-        const geocode = await ymaps.geocode(coords);
-        const address = geocode.geoObjects.get(0).properties.get('text');
-        const placemark = new ymaps.Placemark(coords, {
-            address: address,
-            coords: coords,
-            reviews: reviewsByCoords,
-            comment: item.comment,
-            name: item.name,
-            spot: item.spot,
-        }, {
-            preset: 'islands#violetDotIcon',
-            hideIconOnBalloonOpen: false,
-        });
-        placemarks.push(placemark);
-    }
-
-    clusterer.add(placemarks);
-    map.geoObjects.add(clusterer);
-}
-
 const createCluster = () => {
+    //вынести в pug верстку
     let customItemContentLayout = ymaps.templateLayoutFactory.createClass(
         '<h2 class=carousel_header id=cluster_spot>{{ properties.spot }}</h2>' +
         '<button class=carousel_address id=cluster_address type=button>{{ properties.address }}</button>' +
@@ -149,34 +151,37 @@ const createCluster = () => {
         }
     );
 
-    return new ymaps.Clusterer({
-        preset: 'islands#invertedVioletClusterIcons',
-        clusterDisableClickZoom: true,
-        clusterOpenBalloonOnClick: true,
-        hideIconOnBalloonOpen: false,
-        // Устанавливаем стандартный макет балуна кластера "Карусель".
-        clusterBalloonContentLayout: 'cluster#balloonCarousel',
-        // Устанавливаем собственный макет.
-        clusterBalloonItemContentLayout: customItemContentLayout,
-        // Устанавливаем режим открытия балуна.
-        // В данном примере балун никогда не будет открываться в режиме панели.
-        clusterBalloonPanelMaxMapArea: 0,
-        // Устанавливаем размеры макета контента балуна (в пикселях).
-        clusterBalloonContentLayoutWidth: 200,
-        clusterBalloonContentLayoutHeight: 130,
-        // Устанавливаем максимальное количество элементов в нижней панели на одной странице
-        clusterBalloonPagerSize: 5,
-        // Настройка внешнего вида нижней панели.
-        // Режим marker рекомендуется использовать с небольшим количеством элементов.
-        // clusterBalloonPagerType: 'marker',
-        // Можно отключить зацикливание списка при навигации при помощи боковых стрелок.
-        // clusterBalloonCycling: false,
-        // Можно отключить отображение меню навигации.
-        // clusterBalloonPagerVisible: false
-    });
+    return getCluster(customItemContentLayout)
 }
 
+const getCluster = customItemContentLayout => new ymaps.Clusterer({
+    preset: 'islands#invertedVioletClusterIcons',
+    clusterDisableClickZoom: true,
+    clusterOpenBalloonOnClick: true,
+    hideIconOnBalloonOpen: false,
+    // Устанавливаем стандартный макет балуна кластера "Карусель".
+    clusterBalloonContentLayout: 'cluster#balloonCarousel',
+    // Устанавливаем собственный макет.
+    clusterBalloonItemContentLayout: customItemContentLayout,
+    // Устанавливаем режим открытия балуна.
+    // В данном примере балун никогда не будет открываться в режиме панели.
+    clusterBalloonPanelMaxMapArea: 0,
+    // Устанавливаем размеры макета контента балуна (в пикселях).
+    clusterBalloonContentLayoutWidth: 200,
+    clusterBalloonContentLayoutHeight: 130,
+    // Устанавливаем максимальное количество элементов в нижней панели на одной странице
+    clusterBalloonPagerSize: 5,
+    // Настройка внешнего вида нижней панели.
+    // Режим marker рекомендуется использовать с небольшим количеством элементов.
+    // clusterBalloonPagerType: 'marker',
+    // Можно отключить зацикливание списка при навигации при помощи боковых стрелок.
+    // clusterBalloonCycling: false,
+    // Можно отключить отображение меню навигации.
+    // clusterBalloonPagerVisible: false
+});
+
 const createBalloon = () => {
+    //вынести в pug верстку
     const balloon = ymaps.templateLayoutFactory.createClass(
         '<div class="popup">' +
         '<div class="popup__inner">' +
