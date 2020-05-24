@@ -3,79 +3,43 @@ import {Db} from "./db";
 const db = new Db();
 let balloon;
 let map;
-let placemark;
 let clusterer;
 
 ymaps.ready(init);
 
-// const uniqBy = (a, key) => {
-//     let seen = {};
-//     return a.filter(function (item) {
-//         let k = key(item);
-//         return seen.hasOwnProperty(k) ? false : (seen[k] = true);
-//     })
-// }
-//
-// const getUniqArray = (query) => {
-//     let uniqArray = [];
-//
-//     for (const item of query) {
-//         uniqArray
-//             .push(query.filter(queryItem => queryItem.coords === item.coords));
-//     }
-//
-//     uniqArray = uniqBy(uniqArray, JSON.stringify);
-//
-//     return uniqArray;
-// }
-
-
 function init() {
-    balloon = createReviewWindow();
-    clusterer = createCluster();
-    map = new ymaps.Map("map", {
-        center: [57.5262, 38.3061],
-        zoom: 11,
-        controls: ['zoomControl']
-    }, {
-        searchControlProvider: 'yandex#search',
-        balloonLayout: balloon
-    });
+    initMapsVariables();
+    initReviewsFromDb();
+    initClickListeners();
+}
 
-    db.getAll().onsuccess = async (e) => {
-        let query = await e.target.result;
-        // let uniqArray = getUniqArray(query)
-        let placemarks = [];
-
-        for (const item of query) {
-            let coords = item.coords.split(',');
-            let reviewsByCoords = query.filter(queryItem => queryItem.coords === item.coords);
-            const geocode = await ymaps.geocode(coords);
-            const address = geocode.geoObjects.get(0).properties.get('text');
-            const placemark = new ymaps.Placemark(coords, {
-                address: address,
-                coords: coords,
-                reviews: reviewsByCoords,
-                comment: item.comment,
-                name: item.name,
-                spot: item.spot,
-            }, {
-                preset: 'islands#violetDotIcon',
-                hideIconOnBalloonOpen: false,
-            });
-            placemarks.push(placemark);
-        }
-
-        clusterer.add(placemarks);
-        map.geoObjects.add(clusterer);
-    }
+const initClickListeners = () => {
+    // map.geoObjects.events.add('click', async e => {
+    //     if (e.originalEvent.currentTarget.options.events.types.change[1]._name === 'clusterer') {
+    //         console.log(`kek ${e}`)
+    //     } else {
+    //         let coords = e.get('coords');
+    //         const geocode = await ymaps.geocode(coords);
+    //         const address = geocode.geoObjects.get(0).properties.get('text');
+    //         db.getReviews(coords).onsuccess = async e => {
+    //             map.balloon.open(coords, {
+    //                 properties: {
+    //                     address: address, coords: coords, reviews: await e.target.result
+    //                 }
+    //             }, {
+    //                 preset: 'islands#violetDotIcon',
+    //                 hideIconOnBalloonOpen: false,
+    //             });
+    //         }
+    //     }
+    // });
 
     map.events.add('click', async e => {
+        debugger;
         let coords = e.get('coords');
         const geocode = await ymaps.geocode(coords);
         const address = geocode.geoObjects.get(0).properties.get('text');
         db.getReviews(coords).onsuccess = async e => {
-            // clusterer.add(myPlacemark);
             map.balloon.open(coords, {
                 properties: {
                     address: address, coords: coords, reviews: await e.target.result
@@ -86,17 +50,76 @@ function init() {
             });
         }
     })
+
+    clusterer.events.add('click', async e => {
+        clusterer.balloon.open();
+        // const obj = e.get('target');
+        // debugger;
+        //
+        // if(!obj.getGetObjects) {
+        //     clusterer.balloon.open(coords, {
+        //         properties: {
+        //             address: address, coords: coords, reviews: await e.target.result
+        //         }
+        //     }, {
+        //         preset: 'islands#violetDotIcon',
+        //         balloonLayout: "<div>123</div>",
+        //         hideIconOnBalloonOpen: false,
+        //     })
+        // } else {
+        //
+        // }
+    })
+}
+
+const initMapsVariables = () => {
+    balloon = createReviewWindow();
+    clusterer = createCluster();
+    map = new ymaps.Map("map", {
+        center: [57.5262, 38.3061],
+        zoom: 11,
+        controls: ['zoomControl']
+    }, {
+        balloonLayout: balloon
+    });
+}
+
+const initReviewsFromDb = () => db.getAll().onsuccess = async (e) => {
+    let query = await e.target.result;
+    let placemarks = [];
+
+    for (const item of query) {
+        let coords = item.coords.split(',');
+        let reviewsByCoords = query.filter(queryItem => queryItem.coords === item.coords);
+        const geocode = await ymaps.geocode(coords);
+        const address = geocode.geoObjects.get(0).properties.get('text');
+        const placemark = new ymaps.Placemark(coords, {
+            address: address,
+            coords: coords,
+            reviews: reviewsByCoords,
+            comment: item.comment,
+            name: item.name,
+            spot: item.spot,
+        }, {
+            preset: 'islands#violetDotIcon',
+            hideIconOnBalloonOpen: false,
+        });
+        placemarks.push(placemark);
+    }
+
+    clusterer.add(placemarks);
+    map.geoObjects.add(clusterer);
 }
 
 const createCluster = () => {
     let customItemContentLayout = ymaps.templateLayoutFactory.createClass(
-        '<h2 class=carousel_header id=cluster_spot>{{ properties.spot }}</h2>' +
+        '<h2 class=carousel_header id=cluster_spot>{{ properties.spot }}</h2>' /*+
         '<button class=carousel_address id=cluster_address type=button>{{ properties.address }}</button>' +
         '<div class="carousel_footer" id="cluster_comment">{{ properties.comment }}</div>' +
         '<div class="visually_hidden" id="cluster_name" type="button">{{ properties.name }}</div>' +
         '<div class="visually_hidden" id="cluster_reviews" type="button">{{ properties.reviews }}</div>' +
         '<div class="visually_hidden" id="cluster_address" type="button">{{ properties.address }}</div>' +
-        '<div class="visually_hidden" id="cluster_coords" type="button">{{ properties.coords }}</div>', {
+        '<div class="visually_hidden" id="cluster_coords" type="button">{{ properties.coords }}</div>'*/, {
             build: function () {
                 customItemContentLayout.superclass.build.call(this);
                 $('.carousel_address').bind('click', this.openDetailReview);
@@ -107,32 +130,20 @@ const createCluster = () => {
             },
             openDetailReview: () => {
                 let coords = $('#cluster_coords').text();
-                debugger;
                 let address = $('#cluster_address').text();
                 let comment = $('#cluster_comment').text();
                 let name = $('#cluster_name').text();
                 let spot = $('#cluster_spot').text();
                 let coordsForBalloon = coords.split(",");
                 db.getReviews(coords).onsuccess = async e => {
-                    let myPlacemark = new ymaps.Placemark(coordsForBalloon, {
-                        address: address, coords: coordsForBalloon, reviews: await e.target.result
+                    map.balloon.open(coords, {
+                        properties: {
+                            address: address, coords: coordsForBalloon, reviews: await e.target.result
+                        }
                     }, {
                         preset: 'islands#violetDotIcon',
                         hideIconOnBalloonOpen: false,
                     });
-
-                    map.geoObjects.add(myPlacemark);
-                    myPlacemark.balloon.open();
-                    // map.balloon.open(coords, {
-                    //     properties: {
-                    //         address: address,
-                    //         coords: coordsForBalloon,
-                    //         reviews: await e.target.result,
-                    //         comment,
-                    //         name,
-                    //         spot,
-                    //     }
-                    // });
                 }
             }
         }
@@ -154,7 +165,7 @@ const createCluster = () => {
         clusterBalloonContentLayoutWidth: 200,
         clusterBalloonContentLayoutHeight: 130,
         // Устанавливаем максимальное количество элементов в нижней панели на одной странице
-        clusterBalloonPagerSize: 5
+        clusterBalloonPagerSize: 5,
         // Настройка внешнего вида нижней панели.
         // Режим marker рекомендуется использовать с небольшим количеством элементов.
         // clusterBalloonPagerType: 'marker',
@@ -206,7 +217,6 @@ const createReviewWindow = () => {
         '</div>' +
         '</div>', {
             build: function () {
-                debugger;
                 balloon.superclass.build.call(this);
                 $('#popupClose').bind('click', this.popupCloseCallback);
                 $('#addReview').bind('click', this.addReview);
@@ -238,7 +248,6 @@ const createReviewWindow = () => {
                 db.put(data).onsuccess = async (e) => {
                     db.getReviews(coords).onsuccess = async (e) => {
                         let reviews = await e.target.result;
-                        debugger;
                         map.balloon.setData({
                             properties: {
                                 reviews,
