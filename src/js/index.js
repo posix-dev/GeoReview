@@ -25,17 +25,19 @@ const initMapsVariables = () => {
     });
 }
 
+const createAndGetPlacemark =
+    (coords, options = {}, presets = {}) => new ymaps.Placemark(coords, options, presets);
+
 const initReviewsFromDb = () => db.getAll().onsuccess = async (e) => {
     let query = await e.target.result;
     let placemarks = [];
 
     for (const item of query) {
-        // let placemark = createAndGetClusterPlacemark(item, query)
         let coords = item.coords.split(',');
         let reviewsByCoords = query.filter(queryItem => queryItem.coords === item.coords);
         const geocode = await ymaps.geocode(coords);
         const address = geocode.geoObjects.get(0).properties.get('text');
-        const placemark = new ymaps.Placemark(coords, {
+        const placemark = createAndGetPlacemark(coords, {
             address: address,
             coords: coords,
             reviews: reviewsByCoords,
@@ -45,7 +47,7 @@ const initReviewsFromDb = () => db.getAll().onsuccess = async (e) => {
         }, {
             preset: 'islands#violetDotIcon',
             hideIconOnBalloonOpen: false,
-        });
+        })
         placemarks.push(placemark);
     }
 
@@ -54,6 +56,8 @@ const initReviewsFromDb = () => db.getAll().onsuccess = async (e) => {
 }
 
 const initClickListeners = () => {
+    //уберу комменты после резолва клика по кластеру
+
     // map.geoObjects.events.add('click', async e => {
     //     if (e.originalEvent.currentTarget.options.events.types.change[1]._name === 'clusterer') {
     //         console.log(`kek ${e}`)
@@ -180,6 +184,11 @@ const getCluster = customItemContentLayout => new ymaps.Clusterer({
     // clusterBalloonPagerVisible: false
 });
 
+const getLocalizedFormatString = () => new Date().toLocaleDateString('ru', {
+    year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric',
+    minute: 'numeric', second: 'numeric'
+});
+
 const createBalloon = () => {
     //вынести в pug верстку
     const balloon = ymaps.templateLayoutFactory.createClass(
@@ -242,10 +251,7 @@ const createBalloon = () => {
                 let coords = $('#balloon_coords').text();
                 let address = $('.popup__address').text();
                 let splitCoords = coords.split(',');
-                data['date'] = new Date().toLocaleDateString('ru', {
-                    year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric',
-                    minute: 'numeric', second: 'numeric'
-                });
+                data['date'] = getLocalizedFormatString();
                 data['coords'] = splitCoords;
                 $('.form__name').val('');
                 $('.form__spot').val('');
@@ -264,7 +270,7 @@ const createBalloon = () => {
                             }
                         })
 
-                        const placemark = new ymaps.Placemark(splitCoords, {
+                        const placemark = createAndGetPlacemark(splitCoords, {
                             address,
                             reviews,
                             coords: data.coords,
@@ -274,7 +280,7 @@ const createBalloon = () => {
                         }, {
                             preset: 'islands#violetDotIcon',
                             hideIconOnBalloonOpen: false,
-                        });
+                        })
 
                         clusterer.add(placemark);
                     };
