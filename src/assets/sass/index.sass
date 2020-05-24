@@ -1,0 +1,218 @@
+@import utils/libs
+@import utils/vars
+@import utils/mixins
+@import utils/fonts
+@import utils/reset
+
+html
+  line-height: $mainLineHeight
+  font-size: $mainFontSize
+  color: $mainFontColor
+  height: 100%
+
+  @media screen and (max-width: $desktopWidth)
+    font-size: rem(16px)
+
+  @media screen and (max-width: $tableWidth)
+    font-size: rem(15px)
+
+  @media screen and (max-width: $phoneWidth)
+    font-size: rem(14px)
+
+body
+  margin: 0
+  padding: 0
+  font-family: $mainFont
+  font-size: $mainFontSize
+  font-weight: $mainFontWeight
+  -webkit-font-smoothing: antialiased
+  -moz-osx-font-smoothing: grayscale
+
+*, *:before, *:after
+  box-sizing: border-box
+
+h1, h2, h3, h4, h5, h6
+  margin: 0
+
+a
+  text-decoration: none
+
+ul, li
+  margin: 0
+  padding: 0
+  list-style-type: none
+
+section, .section
+  position: relative
+  padding: rem(40px) 0
+
+  @media screen and (max-width: $desktopWidth)
+    padding: rem(36px) 0
+
+  @media screen and (max-width: $desktopWidth)
+    padding: rem(28px) 0
+
+  @media screen and (max-width: $desktopWidth)
+    padding: rem(20px) 0
+
+.wrapper
+  display: flex
+  flex-direction: column
+  margin: 0 auto
+  min-height: 100vh
+
+.content-wrapper
+  display: flex
+  flex-direction: column
+  min-height: 100vh
+
+.container
+  width: 100%
+  flex: 0 0 auto
+  position: relative
+  margin: 0 auto
+  max-width: $desktopWidth
+
+  @media screen and (max-width: $smDesktopWidth)
+    max-width: $tableWidth
+
+  @media screen and (max-width: $tableWidth)
+    max-width: $phoneWidth
+
+  @media screen and (max-width: $phoneWidth)
+    max-width: $smPhoneWidth
+
+#map
+  width: 100vw
+  height: 100vh
+
+.popup
+  min-width: rem(380px)
+  min-height: rem(570px)
+  position: relative
+  border-radius: rem(15px)
+
+.popup__inner
+  width: 100%
+  height: 100%
+  background: #fff
+  border-radius: rem(8px)
+  position: absolute
+  overflow: hidden
+
+.popup__header
+  background: #ff8663
+  display: flex
+  padding: 0 rem(10px)
+  line-height: rem(32px)
+
+.popup__address
+  width: calc(100% - 20px)
+  font-size: rem(16px)
+  color: #fff
+
+.popup__close
+  border: none
+  background: transparent
+  width: rem(16px)
+  color: #fff
+  font-size: rem(16px)
+  cursor: pointer
+  font-family: Arial, sans-serif
+
+  &:before
+    color: #fff
+    content: 'X'
+    font-weight: 900
+    font-family: Arial, sans-serif
+
+.reviews__list
+  height: rem(160px)
+  overflow-y: scroll
+  padding: rem(7px)
+  color: #4f4f4f
+
+.reviews__item
+  margin-top: rem(20px)
+
+.reviews__author
+  font-size: rem(14px)
+  font-weight: bold
+  padding-right: rem(7px)
+  padding-left: rem(16px)
+
+.reviews__spot
+  font-size: rem(14px)
+  padding-right: rem(10px)
+
+.reviews__date
+  font-size: rem(14px)
+
+.reviews__text
+  padding: rem(10px) rem(7px) rem(10px) rem(16px)
+  font-size: rem(14px)
+  width: rem(350px)
+  overflow: auto
+
+.reviews__empty
+  font-size: rem(16px)
+
+.reviews__title
+  text-transform: uppercase
+  font-weight: bold
+  color: #ff8663
+  font-family: "Fira Sans Medium", sans-serif
+  font-size: rem(16px)
+  margin-left: rem(12px)
+  margin-bottom: rem(12px)
+
+.empty
+  border: rem(1px) solid red
+
+input
+  margin-left: rem(12px)
+  display: block
+  width: rem(352px)
+  border: 1px solid #c4c4c4
+  border-radius: rem(15px)
+  padding: rem(8px) rem(12px)
+  margin-bottom: rem(14px)
+
+.form__button
+  display: flex
+  justify-content: flex-end
+  align-content: end
+  border-radius: rem(15px)
+  padding: rem(8px) rem(12px)
+  background-color: #ff8663
+  color: #ffffff
+  margin: rem(12px) rem(16px) rem(14px) auto
+
+.form__comment
+  margin-left: rem(12px)
+  margin-right: rem(12px)
+  padding: rem(6px)
+  width: rem(352px)
+  border: 1px solid #c4c4c4
+  border-radius: rem(15px)
+
+.carousel_header
+  font-weight: bold
+
+.carousel_footer
+  margin-top: rem(8px)
+  overflow: hidden
+  width: rem(195px)
+
+.carousel_address
+  text-decoration: underline
+  color: blue
+  text-align: left
+  padding: 0
+
+.visually_hidden
+  display: none
+  height: 1px
+  width: 1px
+  opacity: 0.99
+  font-size: 0

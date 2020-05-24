@@ -1,23 +1,20 @@
 extends ../layout/index
 
 block variables
-    - var title = 'Webpack + Pug';
-    - var description = 'Description for Webpack + Pug';
+    - var title = 'Index';
+    - var description = 'index desc';
     - var pageClass = 'index-page';
+    - var API_KEY = 'apikey=45ed0000-13e3-48fe-80c6-cff0bed946e5';
+    - var LANG_RU = 'lang=ru_RU';
+    - var YANDEX_URL = `https://api-maps.yandex.ru/2.1/?${API_KEY}`;
 
 block content
-    section
-        .container
-            +item('item title', 'item descr')
-            +item('item title', 'item descr')
-            +item('item title', 'item descr')
+    div
+        #map
     example-component
 
 block script
-    script(type='text/javascript').
-        const foo = true;
-        let bar = function () {
-        };
-        if (foo) {
-            bar(1 + 5)
-        }
+    script(
+        type='text/javascript',
+        src=`${YANDEX_URL}&${LANG_RU}`
+    ).
