@@ -59,33 +59,21 @@ export class Db {
         let transaction = this.db.transaction(["reviews"], "readwrite");
         let objectStore = transaction.objectStore("reviews");
         const coordsIndex = objectStore.index('by_coords')
-        transaction.oncomplete = (e) => {
-            console.log("All done!");
-        };
 
-        transaction.onerror = (e) => {
-            // Don't forget to handle errors!
-        };
+        transaction.oncomplete = e => console.log(`getReviews ${e.target}`);
+        transaction.onerror = e => console.dir(`getReviews ${e.target.errorCode}`);
 
         return coordsIndex.getAll(coords)
     }
 
     getAll() {
         let transaction = this.db.transaction(["reviews"], "readwrite");
-        transaction.oncomplete = function (e) {
-            console.log("All done!");
-        };
-
-        transaction.onerror = function (e) {
-            // Don't forget to handle errors!
-        };
-
         let objectStore = transaction.objectStore("reviews");
+
+        transaction.oncomplete = (e) => console.dir(`getAll success ${e.target}`);
+        transaction.onerror = e => console.dir(`${e.target.errorCode}`);
+
         return objectStore.getAll()
-    }
-
-    delete(coords) {
-
     }
 
     deleteDataBase() {

@@ -52,7 +52,7 @@ const initClickListeners = () => {
     })
 
     clusterer.events.add('click', async e => {
-        clusterer.balloon.open();
+        // clusterer.balloon.open();
         // const obj = e.get('target');
         // debugger;
         //
@@ -73,7 +73,7 @@ const initClickListeners = () => {
 }
 
 const initMapsVariables = () => {
-    balloon = createReviewWindow();
+    balloon = createBalloon();
     clusterer = createCluster();
     map = new ymaps.Map("map", {
         center: [57.5262, 38.3061],
@@ -113,13 +113,13 @@ const initReviewsFromDb = () => db.getAll().onsuccess = async (e) => {
 
 const createCluster = () => {
     let customItemContentLayout = ymaps.templateLayoutFactory.createClass(
-        '<h2 class=carousel_header id=cluster_spot>{{ properties.spot }}</h2>' /*+
+        '<h2 class=carousel_header id=cluster_spot>{{ properties.spot }}</h2>' +
         '<button class=carousel_address id=cluster_address type=button>{{ properties.address }}</button>' +
         '<div class="carousel_footer" id="cluster_comment">{{ properties.comment }}</div>' +
         '<div class="visually_hidden" id="cluster_name" type="button">{{ properties.name }}</div>' +
         '<div class="visually_hidden" id="cluster_reviews" type="button">{{ properties.reviews }}</div>' +
         '<div class="visually_hidden" id="cluster_address" type="button">{{ properties.address }}</div>' +
-        '<div class="visually_hidden" id="cluster_coords" type="button">{{ properties.coords }}</div>'*/, {
+        '<div class="visually_hidden" id="cluster_coords" type="button">{{ properties.coords }}</div>', {
             build: function () {
                 customItemContentLayout.superclass.build.call(this);
                 $('.carousel_address').bind('click', this.openDetailReview);
@@ -176,7 +176,7 @@ const createCluster = () => {
     });
 }
 
-const createReviewWindow = () => {
+const createBalloon = () => {
     const balloon = ymaps.templateLayoutFactory.createClass(
         '<div class="popup">' +
         '<div class="popup__inner">' +
