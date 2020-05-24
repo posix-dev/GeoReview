@@ -1,12 +1,12 @@
+// eslint-disable-next-line import/prefer-default-export
 export class Db {
-
     constructor() {
-        this.DB_NAME = "reviewsDb"
-        this.indexedDB = window.indexedDB || window.webkitIndexedDB ||
-            window.mozIndexedDB || window.msIndexedDB;
+        this.DB_NAME = 'reviewsDb';
+        this.indexedDB = window.indexedDB || window.webkitIndexedDB
+            || window.mozIndexedDB || window.msIndexedDB;
 
-        let request = this.indexedDB.open("reviewsDb", 1);
-        request.onerror = e => console.log(`${e} ERROR`);
+        const request = this.indexedDB.open('reviewsDb', 1);
+        request.onerror = (e) => console.log(`${e} ERROR`);
         request.onupgradeneeded = () => this.createStore(request);
         request.onsuccess = () => this.db = request.result;
 
@@ -15,68 +15,63 @@ export class Db {
 
     createStore(request) {
         this.db = request.result;
-        const store = this.db.createObjectStore("reviews", {keyPath: "id", autoIncrement: true});
-        const commentIndex = store.createIndex("by_comment", "comment",);
-        const coordsIndex = store.createIndex("by_coords", "coords",);
-        const spotIndex = store.createIndex("by_spot", "spot");
-        const nameIndex = store.createIndex("by_name", "name");
-        const dateIndex = store.createIndex("by_date", "date");
+        const store = this.db.createObjectStore('reviews', {keyPath: 'id', autoIncrement: true});
+        store.createIndex('by_comment', 'comment');
+        store.createIndex('by_coords', 'coords');
+        store.createIndex('by_spot', 'spot');
+        store.createIndex('by_name', 'name');
+        store.createIndex('by_date', 'date');
 
         // Populate with initial data.
         store.put({
-            name: "Pavel Memories",
-            spot: "Africa",
-            comment: "hello1",
-            coords: "55.7558,37.6173",
-            date: "16 Jan"
+            name: 'Pavel Memories',
+            spot: 'Africa',
+            comment: 'hello1',
+            coords: '55.7558,37.6173',
+            date: '16 Jan',
         });
     }
 
-    //целый экземпляр
-    put(data) {
-        let transaction = this.db.transaction(["reviews"], "readwrite");
-        transaction.oncomplete = function (e) {
-            console.dir(`success put - ${data}`);
-        };
+    // целый экземпляр
+    put({
+            name, spot, comment, coords, date,
+        }) {
+        const transaction = this.db.transaction(['reviews'], 'readwrite');
+        transaction.oncomplete = () => console.dir(`success put - ${{
+            name, spot, comment, coords, date,
+        }}`);
+        transaction.onerror = (e) => console.log(`error in put - ${e.target}`);
 
-        transaction.onerror = function (e) {
-            console.dir(`error in put - ${e.target}`);
-        };
+        const objectStore = transaction.objectStore('reviews');
+        const review = {name, spot, comment, coords: coords.join(','), date};
 
-        let objectStore = transaction.objectStore("reviews");
-        let review = {
-            name: data.name,
-            spot: data.spot,
-            comment: data.comment,
-            coords: data.coords.join(','),
-            date: data.date
-        }
+        debugger;
 
         return objectStore.put(review);
     }
 
     getReviews(coords) {
-        let transaction = this.db.transaction(["reviews"], "readwrite");
-        let objectStore = transaction.objectStore("reviews");
-        const coordsIndex = objectStore.index('by_coords')
+        const transaction = this.db.transaction(['reviews'], 'readwrite');
+        const objectStore = transaction.objectStore('reviews');
+        const coordsIndex = objectStore.index('by_coords');
 
-        transaction.oncomplete = e => console.log(`getReviews ${e.target}`);
-        transaction.onerror = e => console.dir(`getReviews ${e.target.errorCode}`);
+        transaction.oncomplete = (e) => console.dir(`getReviews success ${e.target}`);
+        transaction.onerror = (e) => console.log(`getReviews error ${e.target.errorCode}`);
 
-        return coordsIndex.getAll(coords)
+        return coordsIndex.getAll(coords);
     }
 
     getAll() {
-        let transaction = this.db.transaction(["reviews"], "readwrite");
-        let objectStore = transaction.objectStore("reviews");
+        const transaction = this.db.transaction(['reviews'], 'readwrite');
+        const objectStore = transaction.objectStore('reviews');
 
         transaction.oncomplete = (e) => console.dir(`getAll success ${e.target}`);
-        transaction.onerror = e => console.dir(`${e.target.errorCode}`);
+        transaction.onerror = (e) => console.dir(`${e.target.errorCode}`);
 
-        return objectStore.getAll()
+        return objectStore.getAll();
     }
 
     deleteDataBase() {
-        this.indexedDB.deleteDatabase(this.DB_NAME)
+        this.indexedDB.deleteDatabase(this.DB_NAME);
     }
 }
